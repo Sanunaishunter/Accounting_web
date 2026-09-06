@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>輸入記帳 - 記帳系統</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>" />
+<link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+<div id="app-nav"></div>
+
+<div class="container">
+  <h1>📝 輸入記帳資料</h1>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="panel">
+        <h3 class="mt-0">選擇年月</h3>
+        <div class="field">
+          <label>年份</label>
+          <select id="select-year"></select>
+        </div>
+        <div class="field">
+          <label>月份</label>
+          <select id="select-month"></select>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3 class="mt-0">人員列表</h3>
+        <div id="person-list"></div>
+        <details class="expander">
+          <summary>新增人員</summary>
+          <div class="field"><label>姓名</label><input type="text" id="new-person-name" /></div>
+          <div class="field"><label>別名</label><input type="text" id="new-person-aliases" /></div>
+          <button class="primary block" id="btn-add-person">新增</button>
+        </details>
+      </div>
+
+      <div class="panel">
+        <details class="expander">
+          <summary>🗑️ 清除月份資料</summary>
+          <div class="field"><label>年份</label><select id="clear-year"></select></div>
+          <div class="field"><label>月份</label><select id="clear-month"></select></div>
+          <p class="text-dim" id="clear-caption" style="font-size:0.82rem"></p>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.88rem">
+            <input type="checkbox" id="confirm-clear" style="width:auto" /> 確認清除
+          </label>
+          <button class="danger block" id="btn-clear-month" disabled style="margin-top:0.5rem">清除此月資料</button>
+        </details>
+      </div>
+    </aside>
+
+    <main>
+      <h2 id="calendar-title"></h2>
+      <div class="calendar-grid" id="calendar-grid"></div>
+
+      <div id="day-editor"></div>
+
+      <hr class="divider" />
+      <h2>批次輸入</h2>
+      <div id="staged-section"></div>
+      <div id="batch-progress"></div>
+
+      <hr class="divider" />
+      <h2>整月批次輸入</h2>
+      <p class="text-dim">直接貼入整個月的原始文字，parser 會自動依日期行分組處理</p>
+      <textarea id="bulk-text" rows="12" placeholder="範例：
+3/1（日）
+早餐：小明、小華
+晚餐：阿鵰*2、泰禎
+
+3/2（一）
+早餐：小明
+牛奶*1.5：阿鵰、泰禎"></textarea>
+
+      <div id="bulk-preview"></div>
+      <div id="bulk-conflict"></div>
+      <div class="btn-row">
+        <button class="primary" id="btn-bulk-save">✅ 解析並儲存整月資料</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/db.js"></script>
+<script src="assets/js/parser.js"></script>
+<script src="assets/js/nav.js"></script>
+<script src="assets/js/input.js"></script>
+</body>
+</html>

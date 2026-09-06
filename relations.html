@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>關係表 - 記帳系統</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>" />
+<link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+<div id="app-nav"></div>
+
+<div class="container">
+  <h1>🔗 關係表管理</h1>
+  <p class="subtitle">設定備忘關鍵字與人員的對應關係。解析 ⚠️ 備忘時，內容包含關鍵字則自動掛到對應人員下。</p>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="panel">
+        <h3 class="mt-0">使用說明</h3>
+        <p><strong>格式範例：</strong></p>
+        <pre>⚠️台北媽媽家檯燈1499⚠️</pre>
+        <p class="text-dim">若「台北媽媽」已設為牧恩的關鍵字，此備忘會自動掛到牧恩的報表下。</p>
+        <hr class="divider" />
+        <p><strong>目前關鍵字數量：</strong> <span id="proxy-count">0</span></p>
+        <div id="proxy-quick-list"></div>
+      </div>
+    </aside>
+
+    <main>
+      <h2>現有對應</h2>
+      <div id="proxy-list"></div>
+
+      <hr class="divider" />
+      <h2>新增對應</h2>
+      <div class="panel">
+        <div class="cards-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="field"><label>關鍵字</label><input type="text" id="new-keyword" placeholder="例：外婆" /></div>
+          <div class="field"><label>代理人員</label><select id="new-proxy-for"></select></div>
+          <div class="field"><label>說明（選填）</label><input type="text" id="new-note" placeholder="例：崴崴的外婆" /></div>
+        </div>
+        <button class="primary" id="btn-add-proxy">新增</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/db.js"></script>
+<script src="assets/js/parser.js"></script>
+<script src="assets/js/nav.js"></script>
+<script src="assets/js/relations.js"></script>
+</body>
+</html>

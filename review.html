@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>審核 - 記帳系統</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔍</text></svg>" />
+<link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+<div id="app-nav"></div>
+
+<div class="container">
+  <h1>🔍 待審核項目</h1>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="panel">
+        <h3 class="mt-0">人員列表</h3>
+        <div id="person-manage-list"></div>
+      </div>
+      <div class="panel">
+        <h3 class="mt-0">快速新增人員</h3>
+        <div class="field"><label>姓名</label><input type="text" id="quick-add-name" /></div>
+        <div class="field"><label>別名（選填）</label><input type="text" id="quick-add-aliases" /></div>
+        <button class="primary block" id="btn-quick-add">新增</button>
+      </div>
+    </aside>
+
+    <main>
+      <div id="pending-list"></div>
+    </main>
+  </div>
+</div>
+
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/db.js"></script>
+<script src="assets/js/parser.js"></script>
+<script src="assets/js/nav.js"></script>
+<script src="assets/js/review.js"></script>
+</body>
+</html>
