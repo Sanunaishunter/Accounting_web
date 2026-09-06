@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>記帳系統</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>" />
+<link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+<div id="app-nav"></div>
+
+<div class="container">
+  <h1>💰 記帳系統</h1>
+  <p class="subtitle">解析半結構化中文記帳文字，產出統計報表</p>
+
+  <hr class="divider" />
+
+  <div class="metrics" id="metrics"></div>
+
+  <hr class="divider" />
+
+  <h2>功能導覽</h2>
+  <div class="cards-grid">
+    <div class="info-card info">
+      <strong>📝 輸入頁面</strong>
+      <p class="mb-0">月曆模式輸入，點擊日期輸入當日資料</p>
+    </div>
+    <div class="info-card warning">
+      <strong>🔍 審核頁面</strong>
+      <p class="mb-0">處理無法識別的人名，管理人員別名</p>
+    </div>
+    <div class="info-card success">
+      <strong>📊 報表頁面</strong>
+      <p class="mb-0">查看統計報表，匯出資料</p>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <h2>類別單價設定</h2>
+  <details class="expander">
+    <summary>編輯類別單價</summary>
+    <div id="category-price-grid" class="cards-grid" style="margin-top:0.75rem"></div>
+  </details>
+
+  <div id="recent-section"></div>
+
+  <hr class="divider" />
+
+  <h2>資料備份 / 還原</h2>
+  <div class="panel">
+    <p class="text-dim">此系統資料儲存在瀏覽器的 localStorage，僅存在於目前這台裝置與瀏覽器中。請定期匯出備份，或用來搬移到其他裝置。</p>
+    <div class="btn-row">
+      <button class="primary" id="btn-export">📥 匯出備份 (JSON)</button>
+      <button id="btn-import">📤 匯入備份</button>
+      <input type="file" id="file-import" accept="application/json" style="display:none" />
+      <button class="danger" id="btn-reset">🗑️ 重置所有資料</button>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <h2>支援的格式</h2>
+  <pre>1/19（一）
+早餐：小明、小華
+中餐：阿鵰、泰禎
+點心：阿鵰點心+60
+晚餐：傑森*2
+牛奶*1.5：小明
+⚠️ 備忘內容</pre>
+
+  <p><strong>解析規則：</strong></p>
+  <ul class="text-dim">
+    <li><code>類別：人名</code> 基本格式</li>
+    <li><code>人名+金額</code> 額外金額</li>
+    <li><code>人名*次數</code> 多次</li>
+    <li><code>類別*次數：</code> 預設次數</li>
+    <li><code>⚠️</code> 標記備忘</li>
+  </ul>
+
+  <p class="footer-note">今天是 <span id="today-date"></span></p>
+</div>
+
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/db.js"></script>
+<script src="assets/js/parser.js"></script>
+<script src="assets/js/nav.js"></script>
+<script src="assets/js/home.js"></script>
+</body>
+</html>
