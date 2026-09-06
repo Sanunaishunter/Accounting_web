@@ -1,0 +1,14 @@
+{
+  "name": "記帳系統",
+  "short_name": "記帳",
+  "description": "解析半結構化中文記帳文字，產出統計報表",
+  "start_url": "index.html",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#0d9488",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
