@@ -111,22 +111,72 @@
       el.innerHTML = `<p class="text-dim">尚無人員資料</p>`;
       return;
     }
-    el.innerHTML = persons
-      .map(
-        (p) => `
-      <details class="expander" data-id="${p.id}">
-        <summary>${Utils.escapeHtml(p.name)}</summary>
-        <div class="field">
-          <label>別名（逗號分隔）</label>
-          <input type="text" class="edit-alias" value="${Utils.escapeHtml(p.aliases || "")}" />
-        </div>
-        <div class="btn-row">
-          <button class="btn-update-alias small">更新別名</button>
-          <button class="btn-delete-person danger small">🗑️ 刪除人員</button>
-        </div>
-      </details>`
-      )
-      .join("");
+
+    el.innerHTML = `
+      <div class="btn-row" style="margin-top:0">
+        <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem">
+          <input type="checkbox" id="person-select-all" style="width:auto" /> 全選
+        </label>
+        <button class="btn-delete-selected danger small" disabled>🗑️ 刪除已選取人員 (<span class="selected-count">0</span>)</button>
+      </div>
+      ${persons
+        .map(
+          (p) => `
+        <details class="expander" data-id="${p.id}">
+          <summary style="display:flex;align-items:center;gap:0.5rem">
+            <input type="checkbox" class="person-select-cb" data-id="${p.id}" style="width:auto;flex:none" />
+            <span>${Utils.escapeHtml(p.name)}</span>
+          </summary>
+          <div class="field">
+            <label>別名（逗號分隔）</label>
+            <input type="text" class="edit-alias" value="${Utils.escapeHtml(p.aliases || "")}" />
+          </div>
+          <div class="btn-row">
+            <button class="btn-update-alias small">更新別名</button>
+            <button class="btn-delete-person danger small">🗑️ 刪除人員</button>
+          </div>
+        </details>`
+        )
+        .join("")}
+    `;
+
+    const selectAllCb = el.querySelector("#person-select-all");
+    const deleteSelectedBtn = el.querySelector(".btn-delete-selected");
+    const selectedCountEl = el.querySelector(".selected-count");
+    const checkboxes = () => Array.from(el.querySelectorAll(".person-select-cb"));
+
+    function updateBulkState() {
+      const boxes = checkboxes();
+      const selected = boxes.filter((cb) => cb.checked);
+      selectedCountEl.textContent = selected.length;
+      deleteSelectedBtn.disabled = selected.length === 0;
+      selectAllCb.checked = boxes.length > 0 && selected.length === boxes.length;
+      selectAllCb.indeterminate = selected.length > 0 && selected.length < boxes.length;
+    }
+
+    checkboxes().forEach((cb) => {
+      // 避免點擊選取框連動觸發 <summary> 展開/收合
+      cb.addEventListener("click", (e) => e.stopPropagation());
+      cb.addEventListener("change", updateBulkState);
+    });
+
+    selectAllCb.addEventListener("click", (e) => e.stopPropagation());
+    selectAllCb.addEventListener("change", () => {
+      checkboxes().forEach((cb) => (cb.checked = selectAllCb.checked));
+      updateBulkState();
+    });
+
+    deleteSelectedBtn.addEventListener("click", () => {
+      const selectedIds = checkboxes()
+        .filter((cb) => cb.checked)
+        .map((cb) => parseInt(cb.dataset.id, 10));
+      if (!selectedIds.length) return;
+      const names = persons.filter((p) => selectedIds.includes(p.id)).map((p) => p.name);
+      if (!confirm(`確定要刪除以下 ${names.length} 位人員嗎？此動作無法復原。\n\n${names.join("、")}`)) return;
+      selectedIds.forEach((id) => DB.deletePerson(id));
+      Utils.toast(`已刪除 ${names.length} 位人員：${names.join("、")}`, "warning");
+      render();
+    });
 
     el.querySelectorAll("details[data-id]").forEach((d) => {
       const id = parseInt(d.dataset.id, 10);
