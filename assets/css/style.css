@@ -129,11 +129,13 @@ h3 { font-size: 1.1rem; }
   align-items: start;
 }
 
+.sidebar { position: sticky; top: 4.5rem; }
+
 @media (max-width: 860px) {
   .layout { grid-template-columns: 1fr; }
+  /* 單欄版面時側欄與主內容改為上下堆疊，sticky 會讓側欄蓋住主內容，故關閉 */
+  .sidebar { position: static; top: auto; }
 }
-
-.sidebar { position: sticky; top: 4.5rem; }
 
 .field { margin-bottom: 0.85rem; }
 .field label { display: block; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.3rem; }
