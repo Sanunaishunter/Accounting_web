@@ -15,6 +15,14 @@
     "早餐": "早餐", "中餐": "午餐", "晚餐": "晚餐", "牛奶": "鮮奶",
     "點心": "點心", "飲料": "飲料", "文具": "文具",
   };
+  const CATEGORY_ICON = {
+    "早餐": "🍳", "中餐": "🍱", "晚餐": "🍽️", "牛奶": "🥛",
+    "點心": "🍪", "飲料": "🥤", "文具": "✏️",
+  };
+
+  function categoryIcon(cat) {
+    return CATEGORY_ICON[cat] || "🏷️";
+  }
   const MEMO_AMOUNT_RE = /[+＋$＄]\s*[$＄]?\s*(\d+(?:\.\d+)?)/;
 
   function getMonthName(m) {
@@ -133,9 +141,9 @@
   }
 
   global.Utils = {
-    WEEKDAYS, MONTH_NAMES, CATEGORY_ORDER, CATEGORY_DISPLAY, MEMO_AMOUNT_RE,
+    WEEKDAYS, MONTH_NAMES, CATEGORY_ORDER, CATEGORY_DISPLAY, CATEGORY_ICON, MEMO_AMOUNT_RE,
     getMonthName, weekdayName, formatDateTitle, pad2, toDateStr, splitDate,
     shortDate, fmtMoney, escapeHtml, daysInMonth, monthCalendar, downloadFile,
-    toast, toCSV,
+    toast, toCSV, categoryIcon,
   };
 })(window);
