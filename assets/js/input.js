@@ -184,7 +184,7 @@ ${state.month}/${day}（${Utils.weekdayName(state.year, state.month, day)}）
       html += `<div class="alert success">✓ ${success.length} 筆可成功儲存</div>`;
       html += success
         .slice(0, 5)
-        .map((e) => `<div>• ${Utils.escapeHtml(e.category)} | ${Utils.escapeHtml(e.person)} | $${e.amount} × ${e.quantity}</div>`)
+        .map((e) => `<div>• ${Utils.categoryIcon(e.category)} ${Utils.escapeHtml(e.category)} | ${Utils.escapeHtml(e.person)} | $${e.amount} × ${e.quantity}</div>`)
         .join("");
       if (success.length > 5) html += `<div class="text-dim">... 還有 ${success.length - 5} 筆</div>`;
     }

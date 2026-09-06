@@ -70,7 +70,7 @@
       .map(
         ([category, price]) => `
         <div class="field">
-          <label>${Utils.escapeHtml(category)}</label>
+          <label>${Utils.categoryIcon(category)} ${Utils.escapeHtml(category)}</label>
           <input type="number" min="0" step="10" value="${price}" data-category="${Utils.escapeHtml(category)}" class="price-input" />
         </div>`
       )
@@ -102,10 +102,10 @@
           ${recent
             .map(
               (e) => `<tr>
-                <td>${e.date}</td>
-                <td>${Utils.escapeHtml(e.category)}</td>
-                <td>${Utils.escapeHtml(e.person)}</td>
-                <td>$${e.amount} × ${e.quantity} = $${(e.amount * e.quantity).toLocaleString()}</td>
+                <td data-label="日期">${e.date}</td>
+                <td data-label="類別">${Utils.categoryIcon(e.category)} ${Utils.escapeHtml(e.category)}</td>
+                <td data-label="人員">${Utils.escapeHtml(e.person)}</td>
+                <td data-label="金額">$${e.amount} × ${e.quantity} = $${(e.amount * e.quantity).toLocaleString()}</td>
               </tr>`
             )
             .join("")}

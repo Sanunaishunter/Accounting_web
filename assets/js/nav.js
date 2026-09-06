@@ -19,16 +19,29 @@
 
   function renderNav(mount) {
     const cur = currentFile();
+    const active = PAGES.find((p) => p.href === cur) || PAGES[0];
+
     const links = PAGES.map(
       (p) =>
         `<a class="nav-link${p.href === cur ? " active" : ""}" href="${p.href}">${p.icon} ${p.label}</a>`
     ).join("");
 
+    const bottomItems = PAGES.map(
+      (p) => `
+      <a class="bottom-nav-item${p.href === cur ? " active" : ""}" href="${p.href}">
+        <span class="icon">${p.icon}</span>
+        <span>${p.label}</span>
+      </a>`
+    ).join("");
+
     mount.innerHTML = `
       <header class="topbar">
-        <div class="brand">💰 記帳系統</div>
+        <div class="brand">💰 ${active.href === "index.html" ? "記帳系統" : active.label}</div>
         <nav class="nav-links">${links}</nav>
       </header>
+      <nav class="bottom-nav" aria-label="主導覽">
+        <div class="bottom-nav-inner">${bottomItems}</div>
+      </nav>
     `;
   }
 

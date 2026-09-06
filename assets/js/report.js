@@ -7,6 +7,26 @@
   const CATEGORY_ORDER = Utils.CATEGORY_ORDER;
   const CATEGORY_DISPLAY = Utils.CATEGORY_DISPLAY;
 
+  const EXPORT_REPORT_CSS = `
+    body { background: #f4f6f8; color: #1f2430; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif; padding: 2rem; }
+    h1 { font-size: 1.4rem; }
+    .cards { display: flex; flex-wrap: wrap; gap: 1.25rem; }
+    .card-wrap { flex: 0 0 300px; }
+    .report { font-size: 14px; padding: 1.4rem 1.5rem; background: #fff; border-radius: 16px; color: #1f2430; max-width: 360px; border: 1px solid #e6e9ee; border-top: 4px solid #0d9488; box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 2px 8px rgba(16,24,40,.05); }
+    .report table { width: 100%; border-collapse: collapse; }
+    .report td { padding: 5px 6px; }
+    .report .sym { text-align: right; width: 20px; color: #9aa1ab; }
+    .report .amt { text-align: right; width: 80px; font-weight: 600; }
+    .report .divider td { border-top: 1px solid #e6e9ee; padding-top: 8px; font-weight: 700; }
+    .report .section-title { color: #6b7280; font-size: 12px; font-weight: 700; padding-top: 1rem; padding-bottom: 4px; text-transform: uppercase; letter-spacing: .03em; }
+    .report .memo-date { width: 40px; color: #9aa1ab; }
+    .report .memo-who { width: 60px; color: #9aa1ab; }
+    .report .total-row td { font-weight: 800; padding-top: 8px; border-top: 2px solid #0d9488; font-size: 1.05em; color: #0d9488; }
+    .tooltip-container { position: relative; display: inline-block; cursor: pointer; }
+    .tooltip-container .tooltip-text { visibility: hidden; background-color: #1f2430; color: #fff; text-align: left; border-radius: 8px; padding: 8px 12px; position: absolute; z-index: 1000; left: 105%; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: 12px; box-shadow: 0 4px 16px rgba(16,24,40,.12); }
+    .tooltip-container:hover .tooltip-text { visibility: visible; }
+  `;
+
   const state = {
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
@@ -96,7 +116,7 @@
       } else {
         amtCell = amount.toLocaleString(undefined, { maximumFractionDigits: 0 });
       }
-      catRows += `    <tr><td class="label">${Utils.escapeHtml(displayName)}</td><td class="sym">$</td><td class="amt">${amtCell}</td></tr>\n`;
+      catRows += `    <tr><td class="label">${Utils.categoryIcon(cat)} ${Utils.escapeHtml(displayName)}</td><td class="sym">$</td><td class="amt">${amtCell}</td></tr>\n`;
     });
 
     let memoAmtTable = "";
@@ -276,25 +296,9 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
 <html lang="zh-TW">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${Utils.escapeHtml(title)}</title>
-  <style>
-    body { background: #111; color: #ddd; font-family: sans-serif; padding: 2rem; }
-    .cards { display: flex; flex-wrap: wrap; gap: 1.5rem; }
-    .card-wrap { flex: 0 0 280px; }
-    .report { font-family: monospace; font-size: 14px; padding: 1.5rem; background: #1e1e1e; border-radius: 8px; color: #ddd; max-width: 360px; }
-    .report table { width: 100%; border-collapse: collapse; }
-    .report td { padding: 3px 6px; }
-    .report .sym { text-align: right; width: 20px; color: #888; }
-    .report .amt { text-align: right; width: 80px; }
-    .report .divider td { border-top: 1px solid #444; padding-top: 6px; font-weight: bold; }
-    .report .section-title { color: #888; font-size: 13px; padding-top: 1rem; padding-bottom: 4px; }
-    .report .memo-date { width: 40px; color: #888; }
-    .report .memo-who { width: 60px; color: #888; }
-    .report .total-row td { font-weight: bold; padding-top: 6px; border-top: 2px solid #666; }
-    .tooltip-container { position: relative; display: inline-block; cursor: pointer; }
-    .tooltip-container .tooltip-text { visibility: hidden; background-color: #333; color: #fff; text-align: left; border-radius: 6px; padding: 8px 12px; position: absolute; z-index: 1000; left: 105%; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-    .tooltip-container:hover .tooltip-text { visibility: visible; }
-  </style>
+  <style>${EXPORT_REPORT_CSS}</style>
 </head>
 <body>
   <h1>${Utils.escapeHtml(title)}</h1>
@@ -445,9 +449,9 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
         totalAmount += amount;
         if (categoryDetails[cat] && categoryDetails[cat].length) {
           const tip = categoryDetails[cat].join("<br>");
-          rows += `<div class="tooltip-container">${Utils.escapeHtml(displayName)}　$${amount.toLocaleString()}<span class="tooltip-text">${tip}</span></div>`;
+          rows += `<div class="tooltip-container">${Utils.categoryIcon(cat)} ${Utils.escapeHtml(displayName)}　$${amount.toLocaleString()}<span class="tooltip-text">${tip}</span></div>`;
         } else {
-          rows += `<div>${Utils.escapeHtml(displayName)}　$${amount.toLocaleString()}</div>`;
+          rows += `<div>${Utils.categoryIcon(cat)} ${Utils.escapeHtml(displayName)}　$${amount.toLocaleString()}</div>`;
         }
       });
       grandTotal += totalAmount;
@@ -529,7 +533,7 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
       list
         .map((e) => {
           const catDisplay = CATEGORY_DISPLAY[e.category] || e.category;
-          return `<div>📅 ${e.date} (${Utils.shortDate(e.date)}) | ${Utils.escapeHtml(e.person)} | ${Utils.escapeHtml(catDisplay)} | $${e.amount}×${e.quantity}=$${(e.amount * e.quantity).toFixed(0)}</div>`;
+          return `<div>📅 ${e.date} (${Utils.shortDate(e.date)}) | ${Utils.escapeHtml(e.person)} | ${Utils.categoryIcon(e.category)} ${Utils.escapeHtml(catDisplay)} | $${e.amount}×${e.quantity}=$${(e.amount * e.quantity).toFixed(0)}</div>`;
         })
         .join("");
   }
@@ -585,25 +589,9 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
 <html lang="zh-TW">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${monthLabel} 月結報表</title>
-  <style>
-    body { background: #111; color: #ddd; font-family: sans-serif; padding: 2rem; }
-    .cards { display: flex; flex-wrap: wrap; gap: 1.5rem; }
-    .card-wrap { flex: 0 0 280px; }
-    .report { font-family: monospace; font-size: 14px; padding: 1.5rem; background: #1e1e1e; border-radius: 8px; color: #ddd; max-width: 360px; }
-    .report table { width: 100%; border-collapse: collapse; }
-    .report td { padding: 3px 6px; }
-    .report .sym { text-align: right; width: 20px; color: #888; }
-    .report .amt { text-align: right; width: 80px; }
-    .report .divider td { border-top: 1px solid #444; padding-top: 6px; font-weight: bold; }
-    .report .section-title { color: #888; font-size: 13px; padding-top: 1rem; padding-bottom: 4px; }
-    .report .memo-date { width: 40px; color: #888; }
-    .report .memo-who { width: 60px; color: #888; }
-    .report .total-row td { font-weight: bold; padding-top: 6px; border-top: 2px solid #666; }
-    .tooltip-container { position: relative; display: inline-block; cursor: pointer; }
-    .tooltip-container .tooltip-text { visibility: hidden; background-color: #333; color: #fff; text-align: left; border-radius: 6px; padding: 8px 12px; position: absolute; z-index: 1000; left: 105%; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-    .tooltip-container:hover .tooltip-text { visibility: visible; }
-  </style>
+  <style>${EXPORT_REPORT_CSS}</style>
 </head>
 <body>
   <h1>${monthLabel} 月結報表</h1>
