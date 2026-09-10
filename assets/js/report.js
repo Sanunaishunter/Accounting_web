@@ -138,11 +138,11 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
 </div>`;
   }
 
-  function buildCardText(person, categoryTotals, monthLabel, personMemos, categoryDetails) {
-    categoryDetails = categoryDetails || {};
+  function buildCardText(person, categoryTotals, monthLabel, personMemos) {
     const subtotal = CATEGORY_ORDER.reduce((s, cat) => s + (categoryTotals[cat] || 0), 0);
     const { memoWithAmt, memoNoAmt, memoSubtotal } = splitMemoAmounts(personMemos);
     const total = subtotal + memoSubtotal;
+    const memoLine = (d, w, desc) => [d, w, desc].filter(Boolean).join(" ");
 
     const lines = [];
     lines.push(monthLabel);
@@ -152,18 +152,17 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
       const amount = categoryTotals[cat] || 0;
       const displayName = CATEGORY_DISPLAY[cat] || cat;
       lines.push(`${Utils.categoryIcon(cat)} ${displayName}\t$${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`);
-      if (categoryDetails[cat] && categoryDetails[cat].length) {
-        categoryDetails[cat].forEach((d) => lines.push(`    - ${d}`));
-      }
     });
+    lines.push("");
     lines.push(`Sub Total\t$${subtotal.toLocaleString()}`);
 
     if (memoWithAmt.length) {
       lines.push("");
       lines.push("備忘加項：");
       memoWithAmt.forEach(([d, w, desc, amt]) => {
-        lines.push(`${d} ${w} ${desc}\t+$${amt.toLocaleString()}`);
+        lines.push(`${memoLine(d, w, desc)}\t+$${amt.toLocaleString()}`);
       });
+      lines.push("");
       lines.push(`備忘小計\t+$${memoSubtotal.toLocaleString()}`);
     }
 
@@ -171,17 +170,16 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
       lines.push("");
       lines.push("無金額備忘：");
       memoNoAmt.forEach(([d, w, desc]) => {
-        lines.push(`${d} ${w} ${desc}`);
+        lines.push(memoLine(d, w, desc));
       });
     }
 
     lines.push("");
-    let totalLine = `Total\t$${total.toLocaleString()}`;
+    lines.push(`Total\t$${total.toLocaleString()}`);
     if (memoNoAmt.length) {
-      const pendingNote = memoNoAmt.map(([d, w, desc]) => `+ ${d} ${w}${desc}（待補）`).join("；");
-      totalLine += `\t${pendingNote}`;
+      const pendingNote = memoNoAmt.map(([d, w, desc]) => `+ ${memoLine(d, w, desc)}（待補）`).join("；");
+      lines.push(pendingNote);
     }
-    lines.push(totalLine);
 
     return lines.join("\n");
   }
@@ -261,8 +259,8 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
     main.querySelectorAll(".card-block").forEach((block) => {
       const person = block.dataset.person;
       block.querySelector(".btn-export-card").addEventListener("click", () => {
-        const { categoryTotals, personMemoList, categoryDetails } = personData[person];
-        exportSingleCard(person, monthLabel, categoryTotals, personMemoList, categoryDetails);
+        const { categoryTotals, personMemoList } = personData[person];
+        exportSingleCard(person, monthLabel, categoryTotals, personMemoList);
       });
     });
 
@@ -318,8 +316,8 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
     });
   }
 
-  function exportSingleCard(person, monthLabel, categoryTotals, personMemoList, categoryDetails) {
-    const text = buildCardText(person, categoryTotals, monthLabel, personMemoList, categoryDetails);
+  function exportSingleCard(person, monthLabel, categoryTotals, personMemoList) {
+    const text = buildCardText(person, categoryTotals, monthLabel, personMemoList);
     Utils.downloadFile(`${state.year}${Utils.pad2(state.month)}_${person}.txt`, text, "text/plain;charset=utf-8");
   }
 
@@ -586,8 +584,7 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
       const personMemoList = personMemos[person] || [];
       if (!personExpenses.length && !personMemoList.length) return;
       const categoryTotals = categoryTotalsFromExpenses(personExpenses);
-      const categoryDetails = buildCategoryDetails(personExpenses);
-      sections.push(buildCardText(person, categoryTotals, monthLabel, personMemoList, categoryDetails));
+      sections.push(buildCardText(person, categoryTotals, monthLabel, personMemoList));
     });
 
     if (uncategorized.length) {
