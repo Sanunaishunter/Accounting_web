@@ -7,26 +7,6 @@
   const CATEGORY_ORDER = Utils.CATEGORY_ORDER;
   const CATEGORY_DISPLAY = Utils.CATEGORY_DISPLAY;
 
-  const EXPORT_REPORT_CSS = `
-    body { background: #f4f6f8; color: #1f2430; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif; padding: 2rem; }
-    h1 { font-size: 1.4rem; }
-    .cards { display: flex; flex-wrap: wrap; gap: 1.25rem; }
-    .card-wrap { flex: 0 0 300px; }
-    .report { font-size: 14px; padding: 1.4rem 1.5rem; background: #fff; border-radius: 16px; color: #1f2430; max-width: 360px; border: 1px solid #e6e9ee; border-top: 4px solid #0d9488; box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 2px 8px rgba(16,24,40,.05); }
-    .report table { width: 100%; border-collapse: collapse; }
-    .report td { padding: 5px 6px; }
-    .report .sym { text-align: right; width: 20px; color: #9aa1ab; }
-    .report .amt { text-align: right; width: 80px; font-weight: 600; }
-    .report .divider td { border-top: 1px solid #e6e9ee; padding-top: 8px; font-weight: 700; }
-    .report .section-title { color: #6b7280; font-size: 12px; font-weight: 700; padding-top: 1rem; padding-bottom: 4px; text-transform: uppercase; letter-spacing: .03em; }
-    .report .memo-date { width: 40px; color: #9aa1ab; }
-    .report .memo-who { width: 60px; color: #9aa1ab; }
-    .report .total-row td { font-weight: 800; padding-top: 8px; border-top: 2px solid #0d9488; font-size: 1.05em; color: #0d9488; }
-    .tooltip-container { position: relative; display: inline-block; cursor: pointer; }
-    .tooltip-container .tooltip-text { visibility: hidden; background-color: #1f2430; color: #fff; text-align: left; border-radius: 8px; padding: 8px 12px; position: absolute; z-index: 1000; left: 105%; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: 12px; box-shadow: 0 4px 16px rgba(16,24,40,.12); }
-    .tooltip-container:hover .tooltip-text { visibility: visible; }
-  `;
-
   const state = {
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
@@ -81,10 +61,7 @@
     return { personMemos, uncategorized };
   }
 
-  function buildCardHtml(person, categoryTotals, monthLabel, personMemos, categoryDetails) {
-    categoryDetails = categoryDetails || {};
-    const subtotal = CATEGORY_ORDER.reduce((s, cat) => s + (categoryTotals[cat] || 0), 0);
-
+  function splitMemoAmounts(personMemos) {
     const memoWithAmt = [];
     const memoNoAmt = [];
     (personMemos || []).forEach((memo) => {
@@ -101,8 +78,14 @@
         memoNoAmt.push([displayDate, who, content]);
       }
     });
-
     const memoSubtotal = memoWithAmt.reduce((s, [, , , amt]) => s + amt, 0);
+    return { memoWithAmt, memoNoAmt, memoSubtotal };
+  }
+
+  function buildCardHtml(person, categoryTotals, monthLabel, personMemos, categoryDetails) {
+    categoryDetails = categoryDetails || {};
+    const subtotal = CATEGORY_ORDER.reduce((s, cat) => s + (categoryTotals[cat] || 0), 0);
+    const { memoWithAmt, memoNoAmt, memoSubtotal } = splitMemoAmounts(personMemos);
     const total = subtotal + memoSubtotal;
 
     let catRows = "";
@@ -155,6 +138,54 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
 </div>`;
   }
 
+  function buildCardText(person, categoryTotals, monthLabel, personMemos, categoryDetails) {
+    categoryDetails = categoryDetails || {};
+    const subtotal = CATEGORY_ORDER.reduce((s, cat) => s + (categoryTotals[cat] || 0), 0);
+    const { memoWithAmt, memoNoAmt, memoSubtotal } = splitMemoAmounts(personMemos);
+    const total = subtotal + memoSubtotal;
+
+    const lines = [];
+    lines.push(monthLabel);
+    lines.push(person);
+    lines.push("");
+    CATEGORY_ORDER.forEach((cat) => {
+      const amount = categoryTotals[cat] || 0;
+      const displayName = CATEGORY_DISPLAY[cat] || cat;
+      lines.push(`${Utils.categoryIcon(cat)} ${displayName}\t$${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`);
+      if (categoryDetails[cat] && categoryDetails[cat].length) {
+        categoryDetails[cat].forEach((d) => lines.push(`    - ${d}`));
+      }
+    });
+    lines.push(`Sub Total\t$${subtotal.toLocaleString()}`);
+
+    if (memoWithAmt.length) {
+      lines.push("");
+      lines.push("備忘加項：");
+      memoWithAmt.forEach(([d, w, desc, amt]) => {
+        lines.push(`${d} ${w} ${desc}\t+$${amt.toLocaleString()}`);
+      });
+      lines.push(`備忘小計\t+$${memoSubtotal.toLocaleString()}`);
+    }
+
+    if (memoNoAmt.length) {
+      lines.push("");
+      lines.push("無金額備忘：");
+      memoNoAmt.forEach(([d, w, desc]) => {
+        lines.push(`${d} ${w} ${desc}`);
+      });
+    }
+
+    lines.push("");
+    let totalLine = `Total\t$${total.toLocaleString()}`;
+    if (memoNoAmt.length) {
+      const pendingNote = memoNoAmt.map(([d, w, desc]) => `+ ${d} ${w}${desc}（待補）`).join("；");
+      totalLine += `\t${pendingNote}`;
+    }
+    lines.push(totalLine);
+
+    return lines.join("\n");
+  }
+
   // ===== 側欄 =====
 
   function fillSidebar() {
@@ -197,6 +228,7 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
     const monthLabel = `${state.year} ${Utils.getMonthName(state.month)}`;
     let html = "";
     let grandTotal = 0;
+    const personData = {};
 
     personNames.forEach((person) => {
       const personExpenses = expenses.filter((e) => e.person === person);
@@ -205,6 +237,7 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
       const categoryDetails = buildCategoryDetails(personExpenses);
       const cardHtml = buildCardHtml(person, categoryTotals, monthLabel, personMemoList, categoryDetails);
       grandTotal += personExpenses.reduce((s, e) => s + e.amount * e.quantity, 0);
+      personData[person] = { categoryTotals, personMemoList, categoryDetails };
 
       html += `<div class="card-block" data-person="${Utils.escapeHtml(person)}">
         ${cardHtml}
@@ -228,7 +261,8 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
     main.querySelectorAll(".card-block").forEach((block) => {
       const person = block.dataset.person;
       block.querySelector(".btn-export-card").addEventListener("click", () => {
-        exportSingleCard(person, monthLabel, main);
+        const { categoryTotals, personMemoList, categoryDetails } = personData[person];
+        exportSingleCard(person, monthLabel, categoryTotals, personMemoList, categoryDetails);
       });
     });
 
@@ -284,29 +318,9 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
     });
   }
 
-  function exportSingleCard(person, monthLabel, main) {
-    const block = [...main.querySelectorAll(".card-block")].find((b) => b.dataset.person === person);
-    const cardHtml = block.querySelector(".report").outerHTML;
-    const fullHtml = buildStandaloneHtml(`${monthLabel} ${person}`, cardHtml);
-    Utils.downloadFile(`${state.year}${Utils.pad2(state.month)}_${person}.html`, fullHtml, "text/html");
-  }
-
-  function buildStandaloneHtml(title, bodyHtml) {
-    return `<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${Utils.escapeHtml(title)}</title>
-  <style>${EXPORT_REPORT_CSS}</style>
-</head>
-<body>
-  <h1>${Utils.escapeHtml(title)}</h1>
-  <div class="cards">
-    <div class="card-wrap">${bodyHtml}</div>
-  </div>
-</body>
-</html>`;
+  function exportSingleCard(person, monthLabel, categoryTotals, personMemoList, categoryDetails) {
+    const text = buildCardText(person, categoryTotals, monthLabel, personMemoList, categoryDetails);
+    Utils.downloadFile(`${state.year}${Utils.pad2(state.month)}_${person}.txt`, text, "text/plain;charset=utf-8");
   }
 
   // ===== 月份比較 =====
@@ -552,7 +566,7 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
     Utils.downloadFile(filename, csv, "text/csv;charset=utf-8");
   }
 
-  function exportHTMLReport() {
+  function exportTextReport() {
     const persons = DB.getAllPersons();
     const personNames = persons.map((p) => p.name);
     const isYearly = state.reportType === "yearly";
@@ -566,43 +580,24 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
     }
 
     const { personMemos, uncategorized } = categorizeMemosByPerson(memos, personNames);
-    const cardHtmls = [];
+    const sections = [`${monthLabel} 月結報表`];
     personNames.forEach((person) => {
       const personExpenses = expenses.filter((e) => e.person === person);
       const personMemoList = personMemos[person] || [];
       if (!personExpenses.length && !personMemoList.length) return;
       const categoryTotals = categoryTotalsFromExpenses(personExpenses);
       const categoryDetails = buildCategoryDetails(personExpenses);
-      cardHtmls.push(buildCardHtml(person, categoryTotals, monthLabel, personMemoList, categoryDetails));
+      sections.push(buildCardText(person, categoryTotals, monthLabel, personMemoList, categoryDetails));
     });
 
     if (uncategorized.length) {
-      let rows = "";
-      uncategorized.forEach((m) => {
-        rows += `    <tr><td class="memo-date">${Utils.shortDate(m.date)}</td><td class="memo-who">${Utils.escapeHtml(m.person || "")}</td><td colspan="3">${Utils.escapeHtml(m.content)}</td></tr>\n`;
-      });
-      cardHtmls.push(`<div class="report">\n  <h3>備忘（未歸類）</h3>\n  <table>\n${rows}  </table>\n</div>`);
+      const rows = uncategorized.map((m) => `${Utils.shortDate(m.date)} ${m.person || ""} ${m.content}`);
+      sections.push(`備忘（未歸類）\n\n${rows.join("\n")}`);
     }
 
-    const cardsHtml = cardHtmls.map((c) => `<div class="card-wrap">${c}</div>`).join("\n    ");
-    const fullHtml = `<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${monthLabel} 月結報表</title>
-  <style>${EXPORT_REPORT_CSS}</style>
-</head>
-<body>
-  <h1>${monthLabel} 月結報表</h1>
-  <div class="cards">
-    ${cardsHtml}
-  </div>
-</body>
-</html>`;
-
-    const filename = `report_${state.year}_${isYearly ? "all" : state.month}.html`;
-    Utils.downloadFile(filename, fullHtml, "text/html");
+    const fullText = sections.join("\n\n" + "=".repeat(30) + "\n\n");
+    const filename = `report_${state.year}_${isYearly ? "all" : state.month}.txt`;
+    Utils.downloadFile(filename, fullText, "text/plain;charset=utf-8");
   }
 
   // ===== 主流程 =====
@@ -640,7 +635,7 @@ ${catRows}    <tr class="divider"><td>Sub Total</td><td class="sym">$</td><td cl
     });
     document.getElementById("btn-query").addEventListener("click", runQuery);
     document.getElementById("btn-export-csv").addEventListener("click", exportCSV);
-    document.getElementById("btn-export-html").addEventListener("click", exportHTMLReport);
+    document.getElementById("btn-export-txt").addEventListener("click", exportTextReport);
   }
 
   document.addEventListener("DOMContentLoaded", init);
