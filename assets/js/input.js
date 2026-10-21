@@ -345,6 +345,56 @@ ${state.month}/${day}（${Utils.weekdayName(state.year, state.month, day)}）
     el.innerHTML = html;
   }
 
+  // ===== 整理格式 =====
+
+  let beforeNormalize = null;
+
+  function normalizeOptions() {
+    const names = [];
+    DB.getAllPersons().forEach((p) => {
+      names.push(p.name);
+      if (p.aliases) p.aliases.split(",").forEach((a) => a.trim() && names.push(a.trim()));
+    });
+    Object.keys(DB.getPersonProxyMappings()).forEach((k) => names.push(k));
+    const categories = Object.keys(DB.getAllCategoryPrices());
+    return { names, categories: [...new Set([...Normalizer.DEFAULT_CATEGORIES, ...categories])] };
+  }
+
+  function renderNormalizeReport(res) {
+    const el = document.getElementById("bulk-normalize-report");
+    const list = (items) => items.map((t) => `<div>${Utils.escapeHtml(t)}</div>`).join("");
+    let html = res.ok
+      ? `<div class="alert success">已整理格式，自動檢查通過。請確認下方文字後再儲存。</div>`
+      : `<div class="alert warning">⚠️ 自動檢查發現 ${res.problems.length} 個問題，請先確認：${list(res.problems)}</div>`;
+    if (res.flags.length) {
+      html += `<details class="expander" open><summary>需要你確認的 ${res.flags.length} 處</summary>${list(res.flags)}</details>`;
+    }
+    el.innerHTML = html;
+  }
+
+  function normalizeBulk() {
+    const ta = document.getElementById("bulk-text");
+    if (!ta.value.trim()) {
+      Utils.toast("請先貼入文字", "info");
+      return;
+    }
+    beforeNormalize = ta.value;
+    const res = Normalizer.normalize(ta.value, normalizeOptions());
+    ta.value = res.text;
+    document.getElementById("btn-bulk-undo").style.display = "";
+    renderNormalizeReport(res);
+    renderBulkPreview();
+  }
+
+  function undoNormalize() {
+    if (beforeNormalize === null) return;
+    document.getElementById("bulk-text").value = beforeNormalize;
+    beforeNormalize = null;
+    document.getElementById("btn-bulk-undo").style.display = "none";
+    document.getElementById("bulk-normalize-report").innerHTML = "";
+    renderBulkPreview();
+  }
+
   function renderBulkConflict() {
     const el = document.getElementById("bulk-conflict");
     if (!bulkState.conflictItems.length) {
@@ -539,6 +589,8 @@ ${state.month}/${day}（${Utils.weekdayName(state.year, state.month, day)}）
 
     document.getElementById("bulk-text").addEventListener("input", renderBulkPreview);
     document.getElementById("btn-bulk-save").addEventListener("click", bulkSave);
+    document.getElementById("btn-bulk-normalize").addEventListener("click", normalizeBulk);
+    document.getElementById("btn-bulk-undo").addEventListener("click", undoNormalize);
   }
 
   function init() {
